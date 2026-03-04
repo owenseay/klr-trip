@@ -419,8 +419,23 @@
     <div class="photo-overlay" id="video-tetons" style="top: 8%; right: 3%; left: auto;">
       <video src="tetons-web.mp4" muted loop playsinline style="max-width: 500px;"></video>
     </div>
-    <div class="photo-overlay" id="photo-monarch-pass" style="top: 5%; right: 2%; left: auto;">
-      <img src="monarch-pass.webp" alt="Monarch Pass" style="max-width: 800px;">
+    <div class="photo-overlay" id="video-moab-desert" style="top: 10%; left: 3%;">
+      <video src="moab-desert-web.mp4" muted loop playsinline style="max-width: 500px;"></video>
+    </div>
+    <div class="photo-overlay" id="photo-continental-divide" style="top: 5%; right: 2%; left: auto;">
+      <img src="continental-divide.webp" alt="Continental Divide" style="max-width: 800px;">
+    </div>
+    <div class="photo-overlay" id="photo-skatepark-tank" style="top: 3%; left: 3%;">
+      <img src="skatepark_tank.webp" alt="Skatepark tank" style="max-width: 550px;">
+    </div>
+    <div class="photo-overlay" id="photo-taos-police" style="top: 5%; right: 2%; left: auto;">
+      <img src="taos-police.webp" alt="Taos police" style="max-width: 550px;">
+    </div>
+    <div class="photo-overlay" id="video-gulf-shore" style="top: 8%; left: 3%;">
+      <video src="gulf-shore-web.mp4" muted loop playsinline style="max-width: 650px;"></video>
+    </div>
+    <div class="photo-overlay" id="photo-lake-eola" style="top: 5%; right: 2%; left: auto;">
+      <img src="lake-eola.webp" alt="Lake Eola, Orlando" style="max-width: 650px;">
     </div>
 
     <!-- Bottom-right control stack: Day + HUD + map switcher -->
@@ -832,7 +847,12 @@ function init() {
       ['photo-oregon-desert', 880, 960],
       ['photo-me-and-ben', 1555, 1635],
       ['video-tetons', 1660, 1740],
-      ['photo-monarch-pass', 2680, 2760],
+      ['video-moab-desert', 2310, 2390],
+      ['photo-continental-divide', 2680, 2760],
+      ['photo-skatepark-tank', 2880, 2960],
+      ['photo-taos-police', 3270, 3350],
+      ['video-gulf-shore', 4680, 4760],
+      ['photo-lake-eola', 5140, 5184],
     ];
     PHOTO_TRIGGERS.forEach(([id, showMile, hideMile]) => {
       const el = document.getElementById(id);
