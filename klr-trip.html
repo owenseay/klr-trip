@@ -106,7 +106,7 @@
   /* ── MAP SECTION ── */
   .map-section {
     position: relative;
-    height: 1200vh; /* scroll distance for animation — longer = slower/smoother */
+    height: 1500vh; /* 50vh intro + 1200vh route + 50vh end pause + 200vh crossfade */
   }
   .map-sticky {
     position: sticky;
@@ -118,6 +118,19 @@
   #map {
     width: 100%;
     height: 100%;
+    transition: opacity 0.8s ease;
+  }
+  .route-svg-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1000;
+    background: #0a0a0a;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* ── Photo overlay ── */
@@ -291,6 +304,7 @@
   }
   .progress-notch.notch-photo { background: #fff; }
   .progress-notch.notch-video { background: #f0a500; }
+  .progress-notch.notch-sleep { background: rgba(255,255,255,0.3); }
   .progress-labels {
     display: flex;
     justify-content: space-between;
@@ -377,29 +391,133 @@
   }
   .leaflet-control-attribution a { color: rgba(255,255,255,0.4) !important; }
 
-  /* ── AFTER MAP / FOOTER ── */
+  /* ── AFTER MAP / OUTRO ── */
   .outro {
-    padding: 6rem 2rem;
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     text-align: center;
     background: #0a0a0a;
+    padding: 4rem 2rem;
+    overflow: hidden;
   }
-  .outro h2 {
-    font-size: 1.8rem;
+  .outro-bg {
+    position: absolute;
+    inset: 0;
+    background: url('new_mexico.webp') center center / cover no-repeat;
+    opacity: 0;
+    transition: opacity 1.5s ease 0.3s;
+  }
+  .outro-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(10,10,10,0.85) 0%,
+      rgba(10,10,10,0.5) 40%,
+      rgba(10,10,10,0.5) 60%,
+      rgba(10,10,10,0.85) 100%
+    );
+  }
+  .outro.visible .outro-bg {
+    opacity: 1;
+  }
+  .outro-title {
+    position: relative;
+    z-index: 1;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #fff;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 1s ease, transform 1s ease;
+  }
+  .outro-subtitle {
+    position: relative;
+    z-index: 1;
+    font-size: clamp(0.8rem, 1.8vw, 1.1rem);
     font-weight: 300;
-    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-top: 0.8rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 1s ease 0.3s, transform 1s ease 0.3s;
   }
-  .outro .total {
-    font-size: 3.5rem;
+  .outro-stats {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3rem;
+    margin-top: 3rem;
+  }
+  .outro-stat {
+    text-align: center;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .outro-stat-value {
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
     font-weight: 700;
     color: #f0a500;
-    margin: 0.5rem 0;
   }
-  .outro .tagline {
-    font-size: 1rem;
-    color: rgba(255,255,255,0.35);
+  .outro-stat-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    margin-top: 0.3rem;
+  }
+  .outro-stat-detail {
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.25);
+    margin-top: 0.15rem;
+  }
+  .outro-divider {
+    position: relative;
+    z-index: 1;
+    width: 60px;
+    height: 1px;
+    background: rgba(240,165,0,0.3);
+    margin: 2.5rem auto;
+    opacity: 0;
+    transition: opacity 1s ease 0.5s;
+  }
+  .outro-tagline {
+    position: relative;
+    z-index: 1;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.3);
     font-weight: 300;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 1.2s ease 1.2s;
   }
+  .outro.visible .outro-title,
+  .outro.visible .outro-subtitle,
+  .outro.visible .outro-stat,
+  .outro.visible .outro-divider,
+  .outro.visible .outro-tagline {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .outro.visible .outro-stat:nth-child(1) { transition-delay: 0.4s; }
+  .outro.visible .outro-stat:nth-child(2) { transition-delay: 0.55s; }
+  .outro.visible .outro-stat:nth-child(3) { transition-delay: 0.7s; }
+  .outro.visible .outro-stat:nth-child(4) { transition-delay: 0.85s; }
+  .outro.visible .outro-stat:nth-child(5) { transition-delay: 1.0s; }
 </style>
 </head>
 <body>
@@ -411,7 +529,7 @@
   </video>
   <div class="hero-overlay">
     <div class="hero-title">The KLR Trip</div>
-    <div class="hero-subtitle">Washington State → Florida &nbsp;·&nbsp; 16 Days on Two Wheels</div>
+    <div class="hero-subtitle">Washington State → Florida &nbsp;·&nbsp; On Two Wheels</div>
     <div class="hero-stats">
       <div class="hero-stat">
         <div class="hero-stat-value">5,184</div>
@@ -434,6 +552,7 @@
 <section class="map-section" id="mapSection">
   <div class="map-sticky">
     <div id="map"></div>
+    <div class="route-svg-overlay" id="routeSvgOverlay"></div>
 
     <!-- Photo/video overlays -->
     <div class="photo-overlay" id="video-ferry-ride" style="top: 10%; left: 3%;">
@@ -470,7 +589,7 @@
       <video src="gulf-shore-web.mp4" muted loop playsinline style="max-width: 650px;"></video>
     </div>
     <div class="photo-overlay" id="photo-lake-eola" style="top: 5%; right: 2%; left: auto;">
-      <img src="lake-eola.webp" alt="Lake Eola, Orlando" style="max-width: 650px;">
+      <img src="lake-eola-new.webp" alt="Lake Eola, Orlando" style="max-width: 650px;">
     </div>
 
     <!-- Bottom-right control stack: Day + HUD + map switcher -->
@@ -535,10 +654,37 @@
 </section>
 
 <!-- ══════ OUTRO ══════ -->
-<section class="outro">
-  <h2>Odometer</h2>
-  <div class="total">5,184 miles</div>
-  <div class="tagline">Camano Island, WA → Orlando, FL</div>
+<section class="outro" id="outroSection">
+  <div class="outro-bg"></div>
+  <div class="outro-title">A LOTTA BUGS N' DUST</div>
+  <div class="outro-subtitle">Camano Island, WA → Orlando, FL</div>
+  <div class="outro-divider"></div>
+  <div class="outro-stats">
+    <div class="outro-stat">
+      <div class="outro-stat-value">16</div>
+      <div class="outro-stat-label">Days</div>
+    </div>
+    <div class="outro-stat">
+      <div class="outro-stat-value">12</div>
+      <div class="outro-stat-label">States</div>
+    </div>
+    <div class="outro-stat">
+      <div class="outro-stat-value">5,184</div>
+      <div class="outro-stat-label">Miles</div>
+    </div>
+    <div class="outro-stat">
+      <div class="outro-stat-value">3,842,064</div>
+      <div class="outro-stat-label">Tire Rotations</div>
+      <div class="outro-stat-detail">Shinko 700 · 5.10-17</div>
+    </div>
+    <div class="outro-stat">
+      <div class="outro-stat-value">11,268 ft</div>
+      <div class="outro-stat-label">Peak Elevation</div>
+      <div class="outro-stat-detail">Monarch Pass, CO</div>
+    </div>
+  </div>
+  <div class="outro-divider"></div>
+  <div class="outro-tagline">One bike. One road. Every mile earned.</div>
 </section>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -657,21 +803,72 @@ function init() {
 
   // ── Unified marker system ──
   // Sleep markers — moon icon, revealed as route passes
+  // Sleep location info: [lat, lon, town, mile, daily_miles]
+  const SLEEP_INFO = {
+    'Night 1':  { town: 'Clallam County, WA', mile: 137, daily: 137 },
+    'Night 2':  { town: 'Lyons, OR', mile: 585, daily: 448 },
+    'Night 3':  { town: 'Jordan Valley, OR', mile: 921, daily: 336 },
+    'Night 4':  { town: 'Island Park, ID', mile: 1345, daily: 424 },
+    'Night 5':  { town: 'West Yellowstone, MT', mile: 1487, daily: 142 },
+    'Night 6':  { town: 'Grand Teton, WY', mile: 1707, daily: 220 },
+    'Night 7':  { town: 'Flaming Gorge, UT', mile: 2132, daily: 425 },
+    'Night 8':  { town: 'Moab, UT', mile: 2369, daily: 237 },
+    'Night 9':  { town: 'Montrose, CO', mile: 2482, daily: 113 },
+    'Night 10': { town: 'Salida, CO', mile: 2763, daily: 281 },
+    'Night 11': { town: 'Boulder, CO', mile: 2920, daily: 157 },
+    'Night 12': { town: 'Taos, NM', mile: 3338, daily: 418 },
+    'Night 13': { town: 'Clarendon, TX', mile: 3712, daily: 374 },
+    'Night 14': { town: 'Hammond, LA', mile: 4473, daily: 761 },
+    'Night 15': { town: 'Port St. Joe, FL', mile: 4840, daily: 367 },
+  };
+
   const waypointMarkers = [];
+  const sleepProgressList = [];
+  const seenSleepCoords = new Set();
   WAYPOINTS.forEach(wp => {
     if (wp.layer === 'Sleep Locations' || wp.name.includes('Night')) {
-      const m = L.marker([wp.lat, wp.lon], { icon: L.divIcon({
+      // Dedupe by coordinates
+      const coordKey = `${wp.lat.toFixed(4)},${wp.lon.toFixed(4)}`;
+      if (seenSleepCoords.has(coordKey)) return;
+      seenSleepCoords.add(coordKey);
+
+      // Find nearest route point for scroll-jump
+      let bestIdx = 0, bestDist = Infinity;
+      for (let i = 0; i < ROUTE.length; i += 5) {
+        const d = Math.pow(ROUTE[i][0] - wp.lat, 2) + Math.pow(ROUTE[i][1] - wp.lon, 2);
+        if (d < bestDist) { bestDist = d; bestIdx = i; }
+      }
+      const wpProgress = bestIdx / (ROUTE.length - 1);
+
+      const m = L.marker([wp.lat, wp.lon], { zIndexOffset: 600, icon: L.divIcon({
         className: '',
-        html: `<div class="wp-dot" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:rgba(30,30,30,0.8);border:1.5px solid rgba(255,255,255,0.3);border-radius:50%;opacity:0;transition:opacity 0.5s;cursor:default;">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        html: `<div class="wp-dot" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:rgba(30,30,30,0.45);border:1.5px solid rgba(255,255,255,0.15);border-radius:50%;opacity:1;cursor:pointer;">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2.5" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </div>`,
         iconSize: [20, 20],
         iconAnchor: [10, 10]
       })}).addTo(map);
-      m.bindPopup(wp.name, { closeButton: false, offset: [0, -12] });
+      m.on('click', () => scrollToProgress(wpProgress));
+      sleepProgressList.push({ progress: wpProgress, name: wp.name });
+
+      // Build rich popup
+      const nightKey = wp.name.split('(')[0].trim();
+      const info = SLEEP_INFO[nightKey];
+      const popupHtml = info
+        ? `<div style="font-size:12px;line-height:1.5;min-width:120px;">
+            <strong style="font-size:13px;">${nightKey}</strong><br>
+            <span style="color:#666;">${info.town}</span><br>
+            <span style="color:#999;">Mile ${info.mile.toLocaleString()} · ${info.daily} mi today</span>
+          </div>`
+        : wp.name;
+      m.bindTooltip(popupHtml, { direction: 'top', offset: [0, -12], opacity: 0.95, permanent: true });
+      m.closeTooltip(); // start closed
       m._wpLat = wp.lat;
       m._wpLon = wp.lon;
-      m._revealed = false;
+      m._proximityOpen = false;
+      m._hoverOpen = false;
+      m.on('mouseover', () => { m._hoverOpen = true; m.openTooltip(); });
+      m.on('mouseout', () => { m._hoverOpen = false; if (!m._proximityOpen) m.closeTooltip(); });
       waypointMarkers.push(m);
     }
   });
@@ -688,7 +885,7 @@ function init() {
     {id: 'photo-continental-divide', lat: 38.49591, lon: -106.32557, type: 'photo', progress: 0.62508},
     {id: 'photo-skatepark-tank', lat: 40.01322, lon: -105.25424, type: 'photo', progress: 0.68452},
     {id: 'photo-taos-police', lat: 36.46555, lon: -105.66758, type: 'photo', progress: 0.77204},
-    {id: 'video-gulf-shore', lat: 30.35110, lon: -87.03540, type: 'video', progress: 0.93860},
+    {id: 'video-gulf-shore', lat: 30.35110, lon: -87.03540, type: 'video', progress: 0.93875},
     {id: 'photo-lake-eola', lat: 28.54367, lon: -81.37092, type: 'photo', progress: 1.00000},
   ];
 
@@ -697,33 +894,94 @@ function init() {
     const mapEl = document.getElementById('mapSection');
     const scrollStart = mapEl.offsetTop;
     const scrollRange = mapEl.scrollHeight - window.innerHeight;
-    const targetScroll = scrollStart + (prog * scrollRange);
+    // Route progress maps from INTRO_PAUSE_FRAC to ROUTE_END_FRAC
+    const scrollFrac = INTRO_PAUSE_FRAC + prog * (ROUTE_END_FRAC - INTRO_PAUSE_FRAC);
+    const targetScroll = scrollStart + (scrollFrac * scrollRange);
     window.scrollTo({ top: targetScroll, behavior: 'smooth' });
   }
 
   // Camera SVG for photos
   const cameraSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
   // Play SVG for videos
-  const playSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="#fff" stroke="none"><polygon points="6,3 20,12 6,21"/></svg>`;
+  const playSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"><polygon points="6,3 20,12 6,21"/></svg>`;
 
+  const mediaMarkers = [];
   MEDIA_LOCATIONS.forEach(loc => {
     const icon = loc.type === 'video' ? playSvg : cameraSvg;
-    const bgColor = loc.type === 'video' ? 'rgba(240,165,0,0.85)' : 'rgba(255,255,255,0.15)';
-    const borderColor = loc.type === 'video' ? 'rgba(240,165,0,0.6)' : 'rgba(255,255,255,0.4)';
+    const bgColor = loc.type === 'video' ? 'rgba(240,165,0,0.4)' : 'rgba(255,255,255,0.15)';
+    const borderColor = loc.type === 'video' ? 'rgba(240,165,0,0.3)' : 'rgba(255,255,255,0.4)';
     const m = L.marker([loc.lat, loc.lon], {
       icon: L.divIcon({
         className: '',
-        html: `<div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:${bgColor};border:1.5px solid ${borderColor};border-radius:50%;cursor:pointer;transition:transform 0.2s;box-shadow:0 0 8px rgba(0,0,0,0.4);" onmouseover="this.style.transform='scale(1.3)'" onmouseout="this.style.transform='scale(1)'">${icon}</div>`,
+        html: `<div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:${bgColor};border:1.5px solid ${borderColor};border-radius:50%;cursor:pointer;transition:transform 0.2s,opacity 0.4s;box-shadow:0 0 8px rgba(0,0,0,0.4);" onmouseover="this.style.transform='scale(1.3)'" onmouseout="this.style.transform='scale(1)'">${icon}</div>`,
         iconSize: [22, 22],
         iconAnchor: [11, 11]
       }),
       zIndexOffset: 500
     }).addTo(map);
     m.on('click', () => scrollToProgress(loc.progress));
+    mediaMarkers.push(m);
+
+    // Add finish-line tooltip to lake-eola (like sleep tooltips)
+    if (loc.id === 'photo-lake-eola') {
+      const finishHtml = `<div style="font-size:12px;line-height:1.5;min-width:120px;">
+        <strong style="font-size:13px;">Day 16 — Finish</strong><br>
+        <span style="color:#666;">Orlando, FL</span><br>
+        <span style="color:#999;">Mile 5,184 · 344 mi today</span>
+      </div>`;
+      m.bindTooltip(finishHtml, { direction: 'top', offset: [0, -12], opacity: 0.95, permanent: true });
+      m.closeTooltip();
+      m._wpLat = loc.lat;
+      m._wpLon = loc.lon;
+      m._proximityOpen = false;
+      m._hoverOpen = false;
+      m.on('mouseover', () => { m._hoverOpen = true; m.openTooltip(); });
+      m.on('mouseout', () => { m._hoverOpen = false; if (!m._proximityOpen) m.closeTooltip(); });
+      waypointMarkers.push(m);
+    }
   });
+
+  // Start marker with tooltip (like sleep/finish nodes)
+  const startMarker = L.marker([48.16396, -122.51565], { zIndexOffset: 600, icon: L.divIcon({
+    className: '',
+    html: `<div class="wp-dot" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:rgba(30,30,30,0.45);border:1.5px solid rgba(255,255,255,0.15);border-radius:50%;opacity:1;cursor:pointer;">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+    </div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  })}).addTo(map);
+  startMarker.on('click', () => scrollToProgress(0));
+  const startHtml = `<div style="font-size:12px;line-height:1.5;min-width:120px;">
+    <strong style="font-size:13px;">Day 1 — Start</strong><br>
+    <span style="color:#666;">Camano Island, WA</span><br>
+    <span style="color:#999;">Mile 0</span>
+  </div>`;
+  startMarker.bindTooltip(startHtml, { direction: 'top', offset: [0, -12], opacity: 0.95, permanent: true });
+  startMarker.closeTooltip();
+  startMarker._wpLat = 48.16396;
+  startMarker._wpLon = -122.51565;
+  startMarker._proximityOpen = false;
+  startMarker._hoverOpen = false;
+  startMarker.on('mouseover', () => { startMarker._hoverOpen = true; startMarker.openTooltip(); });
+  startMarker.on('mouseout', () => { startMarker._hoverOpen = false; if (!startMarker._proximityOpen) startMarker.closeTooltip(); });
+  waypointMarkers.push(startMarker);
 
   // Progress bar notches
   const progressWrap = document.getElementById('progressWrap');
+
+  // Start/finish notches
+  const startNotch = document.createElement('div');
+  startNotch.className = 'progress-notch notch-sleep';
+  startNotch.style.left = '0%';
+  startNotch.title = 'Start — Camano Island, WA';
+  startNotch.addEventListener('click', () => scrollToProgress(0));
+  progressWrap.appendChild(startNotch);
+  const finishNotch = document.createElement('div');
+  finishNotch.className = 'progress-notch notch-sleep';
+  finishNotch.style.left = '100%';
+  finishNotch.title = 'Finish — Orlando, FL';
+  finishNotch.addEventListener('click', () => scrollToProgress(1));
+  progressWrap.appendChild(finishNotch);
   MEDIA_LOCATIONS.forEach(loc => {
     const pct = loc.progress * 100;
     const notch = document.createElement('div');
@@ -731,6 +989,14 @@ function init() {
     notch.style.left = pct + '%';
     notch.title = loc.id.replace(/^(photo|video)-/, '').replace(/-/g, ' ');
     notch.addEventListener('click', () => scrollToProgress(loc.progress));
+    progressWrap.appendChild(notch);
+  });
+  sleepProgressList.forEach(sp => {
+    const notch = document.createElement('div');
+    notch.className = 'progress-notch notch-sleep';
+    notch.style.left = (sp.progress * 100) + '%';
+    notch.title = sp.name;
+    notch.addEventListener('click', () => scrollToProgress(sp.progress));
     progressWrap.appendChild(notch);
   });
 
@@ -846,12 +1112,32 @@ function init() {
   let targetBearing = 0;
   const LERP_SPEED = 0.06; // Lower = smoother/slower interpolation
 
+  // Layout: 50vh intro | 1200vh route | 50vh end pause | 200vh crossfade to SVG
+  const INTRO_PAUSE_FRAC = 50 / 1500;
+  const ROUTE_END_FRAC = 1250 / 1500;
+  const ROUTE_SCROLL_FRAC = ROUTE_END_FRAC;
+  const CROSSFADE_START_FRAC = 1300 / 1500;
+  let targetZoomOut = 0;   // scroll-driven target for crossfade
+  let currentZoomOut = 0;  // lerp-smoothed crossfade progress
+
   // Read scroll position and set target
   function readScroll() {
     const rect = mapSection.getBoundingClientRect();
     const scrollable = rect.height - window.innerHeight;
     const scrolled = -rect.top;
-    targetProgress = Math.max(0, Math.min(1, scrolled / scrollable));
+    const rawProgress = Math.max(0, scrolled / scrollable);
+    // Route progress: 0–1 maps from INTRO_PAUSE_FRAC to ROUTE_END_FRAC
+    if (rawProgress <= INTRO_PAUSE_FRAC) {
+      targetProgress = 0;
+    } else {
+      targetProgress = Math.min(1, (rawProgress - INTRO_PAUSE_FRAC) / (ROUTE_END_FRAC - INTRO_PAUSE_FRAC));
+    }
+    // Crossfade progress: 0–1 maps from CROSSFADE_START to end (the last 200vh)
+    if (rawProgress > CROSSFADE_START_FRAC) {
+      targetZoomOut = Math.min(1, (rawProgress - CROSSFADE_START_FRAC) / (1 - CROSSFADE_START_FRAC));
+    } else {
+      targetZoomOut = 0;
+    }
   }
 
   window.addEventListener('scroll', readScroll, { passive: true });
@@ -860,12 +1146,21 @@ function init() {
   function animate() {
     requestAnimationFrame(animate);
 
-    // Lerp current toward target
+    // Lerp current toward target — ease in: slower at the start, full speed by 5%
+    const easeIn = currentProgress < 0.05 ? 0.3 + (currentProgress / 0.05) * 0.7 : 1.0;
     const diff = targetProgress - currentProgress;
     if (Math.abs(diff) < 0.00005) {
       currentProgress = targetProgress;
     } else {
-      currentProgress += diff * LERP_SPEED;
+      currentProgress += diff * LERP_SPEED * easeIn;
+    }
+
+    // Lerp zoom-out with same smoothing
+    const zDiff = targetZoomOut - currentZoomOut;
+    if (Math.abs(zDiff) < 0.0001) {
+      currentZoomOut = targetZoomOut;
+    } else {
+      currentZoomOut += zDiff * LERP_SPEED;
     }
 
     // Determine current point index
@@ -893,18 +1188,44 @@ function init() {
     const centerLat = (posLat + ROUTE[lookAhead][0]) / 2;
     const centerLon = (posLon + ROUTE[lookAhead][1]) / 2;
 
+    // ── Map view + zoom-out logic ──
+    const controlStack = document.querySelector('.control-stack');
+    const progressWrap = document.querySelector('.progress-bar-wrap');
+    const elevCanvas = document.getElementById('elevCanvas');
+    const svgOverlay = document.getElementById('routeSvgOverlay');
+
+    // Always keep Leaflet following the route at zoom 7
     map.setView([centerLat, centerLon], 7, { animate: false });
 
-    // Fake zoom effect via CSS scale — no tile reload, no flicker
-    // Start zoomed in, slowly pull back, zoom back in at end
+    // Fake zoom effect via CSS scale — start zoomed in at the beginning
     let cssScale = 1.0;
     if (currentProgress < 0.05) {
       cssScale = 1.3 - (currentProgress / 0.05) * 0.3;
-    } else if (currentProgress > 0.90) {
-      cssScale = 1.0 + ((currentProgress - 0.90) / 0.10) * 0.5;
     }
     map.getContainer().style.transform = `scale(${cssScale})`;
     map.getContainer().style.transformOrigin = 'center center';
+
+    if (currentZoomOut > 0.001) {
+      // ── CROSSFADE PHASE: route complete, fade Leaflet → SVG route overview ──
+      const zoomT = currentZoomOut;
+
+      // Crossfade: Leaflet fades out, SVG overlay fades in
+      map.getContainer().style.opacity = Math.max(0, 1.0 - zoomT * 2);
+      svgOverlay.style.opacity = Math.min(1, zoomT * 2);
+
+      // Fade out HUD, progress bar, elevation quickly
+      const fadeOut = Math.max(0, 1.0 - zoomT * 3);
+      if (controlStack) controlStack.style.opacity = fadeOut;
+      if (progressWrap) progressWrap.parentElement.style.opacity = fadeOut;
+      if (elevCanvas) elevCanvas.style.opacity = fadeOut;
+    } else {
+      // ── NORMAL PHASE ──
+      map.getContainer().style.opacity = 1;
+      svgOverlay.style.opacity = 0;
+      if (controlStack) controlStack.style.opacity = 1;
+      if (progressWrap) progressWrap.parentElement.style.opacity = 1;
+      if (elevCanvas) elevCanvas.style.opacity = 1;
+    }
 
     // Update HUD - miles
     hudMiles.textContent = Math.round(currentMiles).toLocaleString();
@@ -946,16 +1267,20 @@ function init() {
     const curElev = Math.round(getElevAtProgress(currentProgress));
     hudElev.textContent = curElev.toLocaleString() + ' ft';
 
-    // Reveal waypoints that the route has passed
+    // Auto-open/close sleep tooltips — only the single closest one in range
+    let closestWp = null, closestDist = Infinity;
     waypointMarkers.forEach(m => {
-      if (m._revealed) return;
       const dist = Math.sqrt(
         Math.pow(posLat - m._wpLat, 2) + Math.pow(posLon - m._wpLon, 2)
       );
-      if (dist < 0.5) {
-        m._revealed = true;
-        const dot = m.getElement()?.querySelector('.wp-dot');
-        if (dot) dot.style.opacity = '1';
+      m._dist = dist;
+      if (dist < 0.4 && dist < closestDist) { closestDist = dist; closestWp = m; }
+    });
+    waypointMarkers.forEach(m => {
+      if (m === closestWp) {
+        if (!m._proximityOpen) { m._proximityOpen = true; m.openTooltip(); }
+      } else {
+        if (m._proximityOpen) { m._proximityOpen = false; if (!m._hoverOpen) m.closeTooltip(); }
       }
     });
 
@@ -1018,6 +1343,70 @@ function init() {
       ghostRoute.setStyle({ color: style.ghostColor });
     });
   });
+
+  // ── Build SVG route overview for end zoom-out ──
+  (function buildRouteSvg() {
+    const overlay = document.getElementById('routeSvgOverlay');
+    const padding = 60;
+    // Compute bounds
+    let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
+    ROUTE.forEach(([lat, lon]) => {
+      if (lat < minLat) minLat = lat;
+      if (lat > maxLat) maxLat = lat;
+      if (lon < minLon) minLon = lon;
+      if (lon > maxLon) maxLon = lon;
+    });
+    // Use Mercator-ish projection
+    const svgW = 900;
+    const latMid = (minLat + maxLat) / 2;
+    const cosLat = Math.cos(latMid * Math.PI / 180);
+    const lonRange = maxLon - minLon;
+    const latRange = maxLat - minLat;
+    const svgH = svgW * (latRange / (lonRange * cosLat));
+
+    function projX(lon) { return padding + ((lon - minLon) / lonRange) * (svgW - 2 * padding); }
+    function projY(lat) { return padding + ((maxLat - lat) / latRange) * (svgH - 2 * padding); }
+
+    // Sample every 3rd point for a clean line
+    let pathD = '';
+    for (let i = 0; i < ROUTE.length; i += 3) {
+      const x = projX(ROUTE[i][1]).toFixed(1);
+      const y = projY(ROUTE[i][0]).toFixed(1);
+      pathD += (i === 0 ? 'M' : 'L') + x + ',' + y;
+    }
+    // Make sure last point is included
+    const lastX = projX(ROUTE[ROUTE.length - 1][1]).toFixed(1);
+    const lastY = projY(ROUTE[ROUTE.length - 1][0]).toFixed(1);
+    pathD += 'L' + lastX + ',' + lastY;
+
+    overlay.innerHTML = `
+      <svg viewBox="0 0 ${svgW} ${Math.round(svgH)}" style="width:80%;max-height:75vh;" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <filter id="routeGlow">
+            <feGaussianBlur stdDeviation="4" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <path d="${pathD}" fill="none" stroke="rgba(240,165,0,0.25)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" filter="url(#routeGlow)"/>
+        <path d="${pathD}" fill="none" stroke="#f0a500" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="${projX(ROUTE[0][1]).toFixed(1)}" cy="${projY(ROUTE[0][0]).toFixed(1)}" r="5" fill="#fff" opacity="0.8"/>
+        <circle cx="${lastX}" cy="${lastY}" r="5" fill="#f0a500" opacity="0.9"/>
+      </svg>
+    `;
+  })();
+
+  // Outro reveal on scroll into view
+  const outroEl = document.getElementById('outroSection');
+  if (outroEl) {
+    const outroObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          outroEl.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.15 });
+    outroObs.observe(outroEl);
+  }
 
   // Kick off the smooth animation loop
   readScroll();
