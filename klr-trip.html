@@ -154,6 +154,16 @@
     text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 0 30px rgba(0,0,0,0.5);
     text-align: right;
   }
+  .hud-state {
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+    text-align: right;
+    transition: opacity 0.4s ease;
+  }
 
   /* Bottom-right control stack */
   .control-stack {
@@ -242,6 +252,14 @@
   .elev-label.elev-max {
     transform: translateX(-50%);
   }
+  .progress-bar-wrap {
+    position: relative;
+    width: 100%;
+    height: 12px;
+    display: flex;
+    align-items: center;
+    pointer-events: auto;
+  }
   .progress-bar-track {
     width: 100%;
     height: 3px;
@@ -256,6 +274,23 @@
     width: 0%;
     transition: width 0.1s linear;
   }
+  .progress-notch {
+    position: absolute;
+    width: 6px;
+    height: 10px;
+    top: 1px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.15s;
+    opacity: 0.6;
+    z-index: 2;
+  }
+  .progress-notch:hover {
+    transform: scaleY(1.5);
+    opacity: 1;
+  }
+  .progress-notch.notch-photo { background: #fff; }
+  .progress-notch.notch-video { background: #f0a500; }
   .progress-labels {
     display: flex;
     justify-content: space-between;
@@ -402,7 +437,7 @@
 
     <!-- Photo/video overlays -->
     <div class="photo-overlay" id="video-ferry-ride" style="top: 10%; left: 3%;">
-      <video src="ferry-ride-web.mp4" muted loop playsinline style="max-width: 450px;"></video>
+      <video src="ferry-ride-web.mp4" muted loop playsinline style="max-width: 650px;"></video>
     </div>
     <div class="photo-overlay" id="photo-cape-flattery" style="top: 2%; left: 1%;">
       <img src="cape-flattery.webp" alt="Cape Flattery" style="max-width: 650px;">
@@ -411,16 +446,16 @@
       <img src="oregon-coast.webp" alt="Oregon coast" style="max-width: 650px;">
     </div>
     <div class="photo-overlay" id="photo-oregon-desert" style="top: 8%; right: 2%; left: auto;">
-      <img src="oregon-desert.webp" alt="Oregon desert after a storm" style="max-width: 550px;">
+      <img src="oregon-desert.webp" alt="Oregon desert after a storm" style="max-width: 700px;">
     </div>
     <div class="photo-overlay" id="photo-me-and-ben" style="top: 10%; left: 3%;">
       <img src="me-and-ben-2.webp" alt="Me and Ben" style="max-width: 550px;">
     </div>
     <div class="photo-overlay" id="video-tetons" style="top: 8%; right: 3%; left: auto;">
-      <video src="tetons-web.mp4" muted loop playsinline style="max-width: 500px;"></video>
+      <video src="tetons-web.mp4" muted loop playsinline style="max-width: 650px;"></video>
     </div>
     <div class="photo-overlay" id="video-moab-desert" style="top: 10%; left: 3%;">
-      <video src="moab-desert-web.mp4" muted loop playsinline style="max-width: 500px;"></video>
+      <video src="moab-desert-web.mp4" muted loop playsinline style="max-width: 650px;"></video>
     </div>
     <div class="photo-overlay" id="photo-continental-divide" style="top: 5%; right: 2%; left: auto;">
       <img src="continental-divide.webp" alt="Continental Divide" style="max-width: 800px;">
@@ -441,6 +476,7 @@
     <!-- Bottom-right control stack: Day + HUD + map switcher -->
     <div class="control-stack">
       <div class="hud-day" id="hudDay">Day 1 &amp; 2</div>
+      <div class="hud-state" id="hudState">Washington</div>
       <!-- Miles & compass -->
       <div class="hud-panel">
         <div class="hud-miles-row">
@@ -485,8 +521,10 @@
         <canvas id="elevCanvas"></canvas>
         <div class="elev-marker" id="elevMarker" style="left:0%"></div>
       </div>
-      <div class="progress-bar-track">
-        <div class="progress-bar-fill" id="progressFill"></div>
+      <div class="progress-bar-wrap" id="progressWrap">
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
       </div>
       <div class="progress-labels">
         <span>Camano Island, WA</span>
@@ -617,25 +655,20 @@ function init() {
   });
   const posMarker = L.marker(ROUTE[0], { icon: posIcon, zIndexOffset: 1000 }).addTo(map);
 
-  // ── Waypoint markers (initially hidden, revealed as route passes) ──
+  // ── Unified marker system ──
+  // Sleep markers — moon icon, revealed as route passes
   const waypointMarkers = [];
-  const sleepIcon = L.divIcon({
-    className: '',
-    html: '<div style="width:8px;height:8px;background:#f0a500;border:1.5px solid rgba(255,255,255,0.6);border-radius:50%;opacity:0;transition:opacity 0.5s;" class="wp-dot"></div>',
-    iconSize: [8, 8],
-    iconAnchor: [4, 4]
-  });
-
-  // Only show sleep locations and key named stops
   WAYPOINTS.forEach(wp => {
     if (wp.layer === 'Sleep Locations' || wp.name.includes('Night')) {
       const m = L.marker([wp.lat, wp.lon], { icon: L.divIcon({
         className: '',
-        html: `<div style="width:8px;height:8px;background:#f0a500;border:1.5px solid rgba(255,255,255,0.6);border-radius:50%;opacity:0;transition:opacity 0.5s;" class="wp-dot"></div>`,
-        iconSize: [8, 8],
-        iconAnchor: [4, 4]
+        html: `<div class="wp-dot" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:rgba(30,30,30,0.8);border:1.5px solid rgba(255,255,255,0.3);border-radius:50%;opacity:0;transition:opacity 0.5s;cursor:default;">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
       })}).addTo(map);
-      m.bindPopup(wp.name, { closeButton: false, offset: [0, -5] });
+      m.bindPopup(wp.name, { closeButton: false, offset: [0, -12] });
       m._wpLat = wp.lat;
       m._wpLon = wp.lon;
       m._revealed = false;
@@ -643,11 +676,89 @@ function init() {
     }
   });
 
+  // Media markers — camera/play icons, visible from the start, clickable
+  const MEDIA_LOCATIONS = [
+    {id: 'video-ferry-ride', lat: 47.81430, lon: -122.38880, type: 'video', progress: 0.01339},
+    {id: 'photo-cape-flattery', lat: 48.35292, lon: -124.54551, type: 'photo', progress: 0.05062},
+    {id: 'photo-oregon-coast', lat: 45.85554, lon: -123.96262, type: 'photo', progress: 0.12410},
+    {id: 'photo-oregon-desert', lat: 43.90253, lon: -117.44440, type: 'photo', progress: 0.22371},
+    {id: 'photo-me-and-ben', lat: 43.49036, lon: -112.04259, type: 'photo', progress: 0.34716},
+    {id: 'video-tetons', lat: 43.66520, lon: -110.67300, type: 'video', progress: 0.37394},
+    {id: 'video-moab-desert', lat: 39.20590, lon: -109.29820, type: 'video', progress: 0.52286},
+    {id: 'photo-continental-divide', lat: 38.49591, lon: -106.32557, type: 'photo', progress: 0.62508},
+    {id: 'photo-skatepark-tank', lat: 40.01322, lon: -105.25424, type: 'photo', progress: 0.68452},
+    {id: 'photo-taos-police', lat: 36.46555, lon: -105.66758, type: 'photo', progress: 0.77204},
+    {id: 'video-gulf-shore', lat: 30.35110, lon: -87.03540, type: 'video', progress: 0.93860},
+    {id: 'photo-lake-eola', lat: 28.54367, lon: -81.37092, type: 'photo', progress: 1.00000},
+  ];
+
+  // Scroll-to-progress function (index-based progress, matching scroll animation)
+  function scrollToProgress(prog) {
+    const mapEl = document.getElementById('mapSection');
+    const scrollStart = mapEl.offsetTop;
+    const scrollRange = mapEl.scrollHeight - window.innerHeight;
+    const targetScroll = scrollStart + (prog * scrollRange);
+    window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+  }
+
+  // Camera SVG for photos
+  const cameraSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
+  // Play SVG for videos
+  const playSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="#fff" stroke="none"><polygon points="6,3 20,12 6,21"/></svg>`;
+
+  MEDIA_LOCATIONS.forEach(loc => {
+    const icon = loc.type === 'video' ? playSvg : cameraSvg;
+    const bgColor = loc.type === 'video' ? 'rgba(240,165,0,0.85)' : 'rgba(255,255,255,0.15)';
+    const borderColor = loc.type === 'video' ? 'rgba(240,165,0,0.6)' : 'rgba(255,255,255,0.4)';
+    const m = L.marker([loc.lat, loc.lon], {
+      icon: L.divIcon({
+        className: '',
+        html: `<div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:${bgColor};border:1.5px solid ${borderColor};border-radius:50%;cursor:pointer;transition:transform 0.2s;box-shadow:0 0 8px rgba(0,0,0,0.4);" onmouseover="this.style.transform='scale(1.3)'" onmouseout="this.style.transform='scale(1)'">${icon}</div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+      }),
+      zIndexOffset: 500
+    }).addTo(map);
+    m.on('click', () => scrollToProgress(loc.progress));
+  });
+
+  // Progress bar notches
+  const progressWrap = document.getElementById('progressWrap');
+  MEDIA_LOCATIONS.forEach(loc => {
+    const pct = loc.progress * 100;
+    const notch = document.createElement('div');
+    notch.className = `progress-notch notch-${loc.type}`;
+    notch.style.left = pct + '%';
+    notch.title = loc.id.replace(/^(photo|video)-/, '').replace(/-/g, ' ');
+    notch.addEventListener('click', () => scrollToProgress(loc.progress));
+    progressWrap.appendChild(notch);
+  });
+
   // ── Scroll handler ──
   const mapSection = document.getElementById('mapSection');
   const hudMiles = document.getElementById('hudMiles');
   const hudRotations = document.getElementById('hudRotations');
   const hudDay = document.getElementById('hudDay');
+  const hudState = document.getElementById('hudState');
+
+  const STATE_BOUNDARIES = [
+    [0.00000, 'Washington'],
+    [0.11790, 'Oregon'],
+    [0.22894, 'Idaho'],
+    [0.28152, 'Wyoming'],
+    [0.32920, 'Idaho'],
+    [0.36251, 'Wyoming'],
+    [0.46212, 'Utah'],
+    [0.49151, 'Colorado'],
+    [0.51796, 'Utah'],
+    [0.55846, 'Colorado'],
+    [0.76649, 'New Mexico'],
+    [0.82201, 'Texas'],
+    [0.87916, 'Louisiana'],
+    [0.91444, 'Mississippi'],
+    [0.92162, 'Alabama'],
+    [0.93403, 'Florida'],
+  ];
 
   // Shinko 700 5.10-17: diameter = 17 + 2*5.10 = 27.20", circumference = 85.45"
   const ROTATIONS_PER_MILE = 63360 / (27.20 * Math.PI); // ~741.5
@@ -818,6 +929,16 @@ function init() {
         break;
       }
     }
+
+    // Update HUD - state
+    let stateName = STATE_BOUNDARIES[0][1];
+    for (let s = STATE_BOUNDARIES.length - 1; s >= 0; s--) {
+      if (currentProgress >= STATE_BOUNDARIES[s][0]) {
+        stateName = STATE_BOUNDARIES[s][1];
+        break;
+      }
+    }
+    hudState.textContent = stateName;
 
     // Update progress bar + elevation
     progressFill.style.width = (currentProgress * 100) + '%';
