@@ -132,6 +132,22 @@
     align-items: center;
     justify-content: center;
   }
+  .route-svg-overlay .scroll-down-hint {
+    position: absolute;
+    bottom: 3vh;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    animation: scrollBounce 2s ease-in-out infinite;
+  }
+  .route-svg-overlay.visible .scroll-down-hint {
+    opacity: 0.4;
+  }
+  @keyframes scrollBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(6px); }
+  }
 
   /* ── Photo overlay ── */
   .photo-overlay {
@@ -394,14 +410,15 @@
   /* ── AFTER MAP / OUTRO ── */
   .outro {
     position: relative;
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: center;
     text-align: center;
     background: #0a0a0a;
-    padding: 4rem 2rem;
+    padding: 0 2rem 5vh;
+    gap: 0;
     overflow: hidden;
   }
   .outro-bg {
@@ -417,10 +434,11 @@
     inset: 0;
     background: linear-gradient(
       to bottom,
-      rgba(10,10,10,0.85) 0%,
-      rgba(10,10,10,0.5) 40%,
-      rgba(10,10,10,0.5) 60%,
-      rgba(10,10,10,0.85) 100%
+      rgba(10,10,10,0) 0%,
+      rgba(10,10,10,0.1) 40%,
+      rgba(10,10,10,0.5) 62%,
+      rgba(10,10,10,0.78) 80%,
+      rgba(10,10,10,0.88) 100%
     );
   }
   .outro.visible .outro-bg {
@@ -438,6 +456,32 @@
     transform: translateY(30px);
     transition: opacity 1s ease, transform 1s ease;
   }
+  .outro-home-word {
+    position: relative;
+    transition: color 0.3s ease;
+    cursor: pointer;
+  }
+  .outro-home-word:hover {
+    color: #f0a500;
+  }
+  .outro-home-word:hover .outro-home-hint svg {
+    stroke: rgba(240,165,0,0.7);
+    transition: stroke 0.3s ease;
+  }
+  .outro-home-hint {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.6;
+    line-height: 1;
+    margin-bottom: -0.1em;
+    animation: homeBounce 2s ease-in-out infinite;
+  }
+  @keyframes homeBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-5px); }
+  }
   .outro-subtitle {
     position: relative;
     z-index: 1;
@@ -452,8 +496,6 @@
     transition: opacity 1s ease 0.3s, transform 1s ease 0.3s;
   }
   .outro-stats {
-    position: relative;
-    z-index: 1;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -505,11 +547,29 @@
     opacity: 0;
     transition: opacity 1.2s ease 1.2s;
   }
+  .outro-credit {
+    position: absolute;
+    bottom: 1.5vh;
+    right: 2rem;
+    z-index: 1;
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.15);
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 1.5s ease 2s, color 0.3s ease;
+  }
+  .outro-credit:hover {
+    color: rgba(255,255,255,0.4);
+  }
   .outro.visible .outro-title,
   .outro.visible .outro-subtitle,
   .outro.visible .outro-stat,
   .outro.visible .outro-divider,
-  .outro.visible .outro-tagline {
+  .outro.visible .outro-tagline,
+  .outro.visible .outro-credit {
     opacity: 1;
     transform: translateY(0);
   }
@@ -522,6 +582,8 @@
   /* ── Fly bug ── */
   .fly-container {
     position: absolute;
+    top: 0;
+    left: 0;
     pointer-events: none;
     z-index: 100;
     width: 12px;
@@ -570,10 +632,10 @@
   </video>
   <div class="hero-overlay">
     <div class="hero-title">The KLR Trip</div>
-    <div class="hero-subtitle">Washington State → Florida &nbsp;·&nbsp; Two Wheels</div>
+    <div class="hero-subtitle">Camano Island, WA → Orlando, FL</div>
     <div class="hero-stats">
       <div class="hero-stat">
-        <div class="hero-stat-value">5,184</div>
+        <div class="hero-stat-value" data-count-to="5184" data-count-rate="0.5">0</div>
         <div class="hero-stat-label">Miles</div>
       </div>
       <div class="hero-stat">
@@ -623,6 +685,9 @@
     </div>
     <div class="photo-overlay" id="video-moab-desert" style="top: 10%; left: 3%;">
       <video src="moab-desert-web.mp4" muted loop playsinline style="max-width: 650px;"></video>
+    </div>
+    <div class="photo-overlay" id="photo-flaming-gorge" style="top: 8%; left: 3%;">
+      <img src="flaming-gorge-road.webp" alt="Flaming Gorge Road" style="max-width: 700px;">
     </div>
     <div class="photo-overlay" id="photo-continental-divide" style="top: 5%; right: 2%; left: auto;">
       <img src="continental-divide.webp" alt="Continental Divide" style="max-width: 800px;">
@@ -704,12 +769,12 @@
 <!-- ══════ OUTRO ══════ -->
 <section class="outro" id="outroSection">
   <div class="outro-bg"></div>
-  <div class="outro-title">A LOTTA BUGS N' DUST</div>
-  <div class="outro-subtitle">Camano Island, WA → Orlando, FL</div>
-  <div class="outro-divider"></div>
+  <div class="outro-title">
+    THE LONG WAY <span class="outro-home-word" id="outroHomeLink">HOME<span class="outro-home-hint"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg></span></span>
+  </div>
   <div class="outro-stats">
     <div class="outro-stat">
-      <div class="outro-stat-value">5,184</div>
+      <div class="outro-stat-value" data-outro-count-from="4850" data-outro-count-to="5184">4,850</div>
       <div class="outro-stat-label">Miles</div>
     </div>
     <div class="outro-stat">
@@ -724,7 +789,8 @@
     </div>
   </div>
   <div class="outro-divider"></div>
-  <div class="outro-tagline">A few hundred bucks of fuel & oil.</div>
+  <div class="outro-tagline">A lotta bugs n' dust.</div>
+  <a href="https://owenseay.com" class="outro-credit" target="_blank" rel="noopener">Owen Seay</a>
   <div class="fly-container flying" id="outroFly" style="display:none;">
     <div class="fly-body">
       <div class="fly-wing fly-wing-l"></div>
@@ -929,6 +995,7 @@ function init() {
     {id: 'photo-me-and-ben', lat: 43.49036, lon: -112.04259, type: 'photo', progress: 0.34716},
     {id: 'video-tetons', lat: 43.66520, lon: -110.67300, type: 'video', progress: 0.37394},
     {id: 'video-moab-desert', lat: 39.20590, lon: -109.29820, type: 'video', progress: 0.52286},
+    {id: 'photo-flaming-gorge', lat: 40.90810, lon: -109.69872, type: 'photo', progress: 0.46995},
     {id: 'photo-continental-divide', lat: 38.49591, lon: -106.32557, type: 'photo', progress: 0.62508},
     {id: 'photo-skatepark-tank', lat: 40.01322, lon: -105.25424, type: 'photo', progress: 0.68452},
     {id: 'photo-taos-police', lat: 36.46555, lon: -105.66758, type: 'photo', progress: 0.77204},
@@ -966,7 +1033,22 @@ function init() {
       }),
       zIndexOffset: 500
     }).addTo(map);
-    m.on('click', () => scrollToProgress(loc.progress));
+    m.on('click', () => {
+      scrollToProgress(loc.progress);
+      // Toggle video audio on click (user gesture unlocks browser audio)
+      if (loc.type === 'video') {
+        const overlay = document.getElementById(loc.id);
+        const vid = overlay && overlay.querySelector('video');
+        if (vid) {
+          if (!vid.muted) {
+            vid.muted = true;
+          } else {
+            vid.muted = false;
+            vid.volume = 0.2;
+          }
+        }
+      }
+    });
     mediaMarkers.push(m);
 
     // Add finish-line tooltip to lake-eola (like sleep tooltips)
@@ -1034,7 +1116,22 @@ function init() {
     const notch = document.createElement('div');
     notch.className = `progress-notch notch-${loc.type}`;
     notch.style.left = pct + '%';
-    notch.title = loc.id.replace(/^(photo|video)-/, '').replace(/-/g, ' ');
+    const NOTCH_NAMES = {
+      'video-ferry-ride': 'Ferry Ride',
+      'photo-cape-flattery': 'Cape Flattery',
+      'photo-oregon-coast': 'Oregon Coast',
+      'photo-oregon-desert': 'Oregon Desert',
+      'photo-me-and-ben': 'Me & Ben',
+      'video-tetons': 'Tetons',
+      'photo-flaming-gorge': 'Flaming Gorge',
+      'video-moab-desert': 'Moab Desert',
+      'photo-continental-divide': 'Continental Divide',
+      'photo-skatepark-tank': 'Skatepark Tank',
+      'photo-taos-police': 'Taos Police',
+      'video-gulf-shore': 'Gulf Shore',
+      'photo-lake-eola': 'Lake Eola',
+    };
+    notch.title = NOTCH_NAMES[loc.id] || loc.id;
     notch.addEventListener('click', () => scrollToProgress(loc.progress));
     progressWrap.appendChild(notch);
   });
@@ -1042,7 +1139,9 @@ function init() {
     const notch = document.createElement('div');
     notch.className = 'progress-notch notch-sleep';
     notch.style.left = (sp.progress * 100) + '%';
-    notch.title = sp.name;
+    const nightKey = sp.name.split('(')[0].trim();
+    const sleepInfo = SLEEP_INFO[nightKey];
+    notch.title = sleepInfo ? `${nightKey} — ${sleepInfo.town}` : nightKey;
     notch.addEventListener('click', () => scrollToProgress(sp.progress));
     progressWrap.appendChild(notch);
   });
@@ -1177,7 +1276,27 @@ function init() {
     if (rawProgress <= INTRO_PAUSE_FRAC) {
       targetProgress = 0;
     } else {
-      targetProgress = Math.min(1, (rawProgress - INTRO_PAUSE_FRAC) / (ROUTE_END_FRAC - INTRO_PAUSE_FRAC));
+      let prog = Math.min(1, (rawProgress - INTRO_PAUSE_FRAC) / (ROUTE_END_FRAC - INTRO_PAUSE_FRAC));
+      // Sticky media nodes: flatten progress near media locations
+      // so scrolling slows down around photos/videos
+      const STICKY_RADIUS = 0.008;  // progress range to flatten
+      const STICKY_HOLD = 0.004;    // dead zone in the middle (no movement)
+      for (let i = 0; i < MEDIA_LOCATIONS.length; i++) {
+        const mp = MEDIA_LOCATIONS[i].progress;
+        const dist = prog - mp;
+        if (Math.abs(dist) < STICKY_RADIUS) {
+          if (Math.abs(dist) < STICKY_HOLD) {
+            prog = mp; // dead zone — park on the node
+          } else {
+            // Ease out of the dead zone
+            const sign = dist > 0 ? 1 : -1;
+            const overshoot = (Math.abs(dist) - STICKY_HOLD) / (STICKY_RADIUS - STICKY_HOLD);
+            prog = mp + sign * STICKY_HOLD + sign * overshoot * (STICKY_RADIUS - STICKY_HOLD) * 0.3;
+          }
+          break;
+        }
+      }
+      targetProgress = prog;
     }
     // Crossfade progress: 0–1 maps from CROSSFADE_START to end (the last 200vh)
     if (rawProgress > CROSSFADE_START_FRAC) {
@@ -1195,6 +1314,7 @@ function init() {
 
     // Lerp current toward target — ease in: slower at the start, full speed by 5%
     const easeIn = currentProgress < 0.05 ? 0.3 + (currentProgress / 0.05) * 0.7 : 1.0;
+
     const diff = targetProgress - currentProgress;
     if (Math.abs(diff) < 0.00005) {
       currentProgress = targetProgress;
@@ -1259,6 +1379,7 @@ function init() {
       // Crossfade: Leaflet fades out, SVG overlay fades in
       map.getContainer().style.opacity = Math.max(0, 1.0 - zoomT * 2);
       svgOverlay.style.opacity = Math.min(1, zoomT * 2);
+      if (zoomT > 0.5) svgOverlay.classList.add('visible');
 
       // Fade out HUD, progress bar, elevation quickly
       const fadeOut = Math.max(0, 1.0 - zoomT * 3);
@@ -1269,6 +1390,7 @@ function init() {
       // ── NORMAL PHASE ──
       map.getContainer().style.opacity = 1;
       svgOverlay.style.opacity = 0;
+      svgOverlay.classList.remove('visible');
       if (controlStack) controlStack.style.opacity = 1;
       if (progressWrap) progressWrap.parentElement.style.opacity = 1;
       if (elevCanvas) elevCanvas.style.opacity = 1;
@@ -1340,6 +1462,7 @@ function init() {
       ['photo-oregon-desert', 880, 960],
       ['photo-me-and-ben', 1555, 1635],
       ['video-tetons', 1660, 1740],
+      ['photo-flaming-gorge', 2100, 2180],
       ['video-moab-desert', 2310, 2390],
       ['photo-continental-divide', 2680, 2760],
       ['photo-skatepark-tank', 2880, 2960],
@@ -1439,20 +1562,56 @@ function init() {
         <circle cx="${projX(ROUTE[0][1]).toFixed(1)}" cy="${projY(ROUTE[0][0]).toFixed(1)}" r="5" fill="#fff" opacity="0.8"/>
         <circle cx="${lastX}" cy="${lastY}" r="5" fill="#f0a500" opacity="0.9"/>
       </svg>
+      <div class="scroll-down-hint">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
     `;
   })();
 
   // Outro reveal on scroll into view
   const outroEl = document.getElementById('outroSection');
   if (outroEl) {
+    let outroCounterStarted = false;
     const outroObs = new IntersectionObserver((entries) => {
       entries.forEach(e => {
         if (e.isIntersecting) {
           outroEl.classList.add('visible');
+          if (!outroCounterStarted) {
+            outroCounterStarted = true;
+            const el = outroEl.querySelector('[data-outro-count-to]');
+            if (el) {
+              const from = parseInt(el.dataset.outroCountFrom);
+              const to = parseInt(el.dataset.outroCountTo);
+              const range = to - from;
+              let current = from;
+              const startTime = performance.now();
+              const duration = range * 80; // ~80ms per mile — slow crawl
+              function tickOutro(now) {
+                const elapsed = now - startTime;
+                const t = Math.min(1, elapsed / duration);
+                // Ease-out: fast at start, slowing dramatically toward the end
+                const eased = 1 - Math.pow(1 - t, 3);
+                current = from + range * eased;
+                el.textContent = Math.floor(current).toLocaleString();
+                if (t < 1) requestAnimationFrame(tickOutro);
+              }
+              requestAnimationFrame(tickOutro);
+            }
+          }
         }
       });
     }, { threshold: 0.15 });
     outroObs.observe(outroEl);
+
+    // Click HOME to scroll back to hero
+    const outroHomeLink = document.getElementById('outroHomeLink');
+    if (outroHomeLink) {
+      outroHomeLink.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
   }
 
   // Kick off the smooth animation loop
@@ -1462,6 +1621,48 @@ function init() {
 }
 
 init();
+
+// ── Hero stat counters ──
+(function initCounters() {
+  const counters = document.querySelectorAll('[data-count-to]');
+  if (!counters.length) return;
+
+  const state = [];
+  counters.forEach(el => {
+    state.push({
+      el,
+      target: parseInt(el.dataset.countTo),
+      rate: parseFloat(el.dataset.countRate),
+      current: 0,
+      started: false
+    });
+  });
+
+  // Start counting when hero is visible
+  let running = false;
+  const heroObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting && !running) {
+        running = true;
+        // Small delay before counting starts
+        setTimeout(tickCounters, 800);
+      }
+    });
+  }, { threshold: 0.5 });
+  heroObs.observe(document.querySelector('.hero'));
+
+  function tickCounters() {
+    let anyActive = false;
+    state.forEach(s => {
+      if (s.current >= s.target) return;
+      anyActive = true;
+      s.current = Math.min(s.target, s.current + s.rate);
+      const display = Math.floor(s.current);
+      s.el.textContent = display.toLocaleString();
+    });
+    if (anyActive) requestAnimationFrame(tickCounters);
+  }
+})();
 
 // ── Fly bug animation ──
 (function initFlies() {
@@ -1481,7 +1682,13 @@ init();
     function pickLetterTarget() {
       const els = sectionEl.querySelectorAll(textSelector);
       if (!els.length) return { x: 100, y: 100 };
-      const el = els[Math.floor(Math.random() * els.length)];
+      // Only pick from text elements currently in the viewport
+      const visible = Array.from(els).filter(e => {
+        const r = e.getBoundingClientRect();
+        return r.top < window.innerHeight && r.bottom > 0 && r.height > 0;
+      });
+      const pool = visible.length ? visible : els;
+      const el = pool[Math.floor(Math.random() * pool.length)];
       const rect = el.getBoundingClientRect();
       const secRect = sectionEl.getBoundingClientRect();
       // Land tightly on the text — inset from edges to avoid whitespace/padding
@@ -1621,16 +1828,29 @@ init();
   );
 
   // Use IntersectionObserver to start/stop flies
-  [heroFly, outroFly].forEach(ctrl => {
-    if (!ctrl) return;
-    const obs = new IntersectionObserver((entries) => {
+  // Hero fly — start immediately on visibility
+  if (heroFly) {
+    const heroObs = new IntersectionObserver((entries) => {
       entries.forEach(e => {
-        if (e.isIntersecting) ctrl.start();
-        else ctrl.stop();
+        if (e.isIntersecting) heroFly.start();
+        else heroFly.stop();
       });
     }, { threshold: 0.3 });
-    obs.observe(ctrl.el);
-  });
+    heroObs.observe(heroFly.el);
+  }
+  // Outro fly — delay start so text fade-in + translateY transitions finish first
+  if (outroFly) {
+    const outroObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          setTimeout(() => outroFly.start(), 1800);
+        } else {
+          outroFly.stop();
+        }
+      });
+    }, { threshold: 0.3 });
+    outroObs.observe(outroFly.el);
+  }
 })();
 </script>
 </body>
