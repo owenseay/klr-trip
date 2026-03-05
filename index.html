@@ -643,6 +643,97 @@
   @keyframes wingR { from { transform: rotate(10deg); } to { transform: rotate(50deg); } }
   @keyframes wingIdleL { from { transform: rotate(-5deg); } to { transform: rotate(-15deg); } }
   @keyframes wingIdleR { from { transform: rotate(5deg); } to { transform: rotate(15deg); } }
+
+  /* ── Mobile responsive ── */
+  @media (max-width: 768px) {
+    /* Photos & videos: cap to screen width */
+    .photo-overlay img,
+    .photo-overlay video {
+      max-width: 85vw !important;
+    }
+    .photo-overlay {
+      left: 50% !important;
+      right: auto !important;
+      top: 5% !important;
+      transform: translateX(-50%);
+    }
+
+    /* HUD: compact layout */
+    .control-stack {
+      bottom: 3.5rem;
+      right: 0.8rem;
+    }
+    .hud-panel {
+      padding: 0.4rem 0.6rem;
+    }
+    .hud-value {
+      font-size: 1.1rem;
+    }
+    .hud-label {
+      font-size: 0.45rem;
+    }
+    .hud-day {
+      font-size: 0.9rem;
+    }
+    .hud-state {
+      font-size: 0.6rem;
+    }
+    .hud-divider {
+      height: 1.5rem;
+    }
+    .compass {
+      width: 35px;
+      height: 35px;
+    }
+    .sw-btn {
+      padding: 0.25rem 0.45rem;
+      font-size: 0.5rem;
+    }
+
+    /* Bottom HUD: tighter padding */
+    .hud-bottom {
+      padding: 0.5rem 0.8rem 1rem;
+    }
+    .elev-profile {
+      height: 28px;
+    }
+    .progress-bar-wrap {
+      height: 10px;
+    }
+
+    /* Sleep/waypoint tooltips: smaller */
+    .leaflet-tooltip {
+      font-size: 10px !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    /* Even smaller phones */
+    .photo-overlay img,
+    .photo-overlay video {
+      max-width: 92vw !important;
+    }
+    .control-stack {
+      bottom: 3rem;
+      right: 0.5rem;
+    }
+    .hud-value {
+      font-size: 0.95rem;
+    }
+    .hud-day {
+      font-size: 0.8rem;
+    }
+    .compass {
+      width: 28px;
+      height: 28px;
+    }
+    .hud-bottom {
+      padding: 0.4rem 0.5rem 0.8rem;
+    }
+    .elev-profile {
+      height: 22px;
+    }
+  }
 </style>
 </head>
 <body>
