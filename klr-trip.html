@@ -518,6 +518,47 @@
   .outro.visible .outro-stat:nth-child(3) { transition-delay: 0.7s; }
   .outro.visible .outro-stat:nth-child(4) { transition-delay: 0.85s; }
   .outro.visible .outro-stat:nth-child(5) { transition-delay: 1.0s; }
+
+  /* ── Fly bug ── */
+  .fly-container {
+    position: absolute;
+    pointer-events: none;
+    z-index: 100;
+    width: 12px;
+    height: 12px;
+    transition: none;
+  }
+  .fly-body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  .fly-wing {
+    position: absolute;
+    width: 5px;
+    height: 3px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    top: 0px;
+  }
+  .fly-wing-l { left: -1px; transform-origin: right center; }
+  .fly-wing-r { right: -1px; transform-origin: left center; }
+  .fly-container.flying .fly-wing-l {
+    animation: wingL 0.06s ease-in-out infinite alternate;
+  }
+  .fly-container.flying .fly-wing-r {
+    animation: wingR 0.06s ease-in-out infinite alternate;
+  }
+  .fly-container.landed .fly-wing-l {
+    animation: wingIdleL 0.8s ease-in-out infinite alternate;
+  }
+  .fly-container.landed .fly-wing-r {
+    animation: wingIdleR 0.8s ease-in-out infinite alternate;
+  }
+  @keyframes wingL { from { transform: rotate(-10deg); } to { transform: rotate(-50deg); } }
+  @keyframes wingR { from { transform: rotate(10deg); } to { transform: rotate(50deg); } }
+  @keyframes wingIdleL { from { transform: rotate(-5deg); } to { transform: rotate(-15deg); } }
+  @keyframes wingIdleR { from { transform: rotate(5deg); } to { transform: rotate(15deg); } }
 </style>
 </head>
 <body>
@@ -529,7 +570,7 @@
   </video>
   <div class="hero-overlay">
     <div class="hero-title">The KLR Trip</div>
-    <div class="hero-subtitle">Washington State → Florida &nbsp;·&nbsp; On Two Wheels</div>
+    <div class="hero-subtitle">Washington State → Florida &nbsp;·&nbsp; Two Wheels</div>
     <div class="hero-stats">
       <div class="hero-stat">
         <div class="hero-stat-value">5,184</div>
@@ -546,6 +587,13 @@
     </div>
   </div>
   <div class="scroll-hint">Scroll to ride</div>
+  <div class="fly-container flying" id="heroFly" style="display:none;">
+    <div class="fly-body">
+      <div class="fly-wing fly-wing-l"></div>
+      <div class="fly-wing fly-wing-r"></div>
+      <svg width="12" height="12" viewBox="0 0 12 12"><ellipse cx="6" cy="7" rx="2.2" ry="3" fill="rgba(0,0,0,0.7)"/><circle cx="6" cy="3.5" r="1.5" fill="rgba(0,0,0,0.8)"/></svg>
+    </div>
+  </div>
 </section>
 
 <!-- ══════ MAP ══════ -->
@@ -661,14 +709,6 @@
   <div class="outro-divider"></div>
   <div class="outro-stats">
     <div class="outro-stat">
-      <div class="outro-stat-value">16</div>
-      <div class="outro-stat-label">Days</div>
-    </div>
-    <div class="outro-stat">
-      <div class="outro-stat-value">12</div>
-      <div class="outro-stat-label">States</div>
-    </div>
-    <div class="outro-stat">
       <div class="outro-stat-value">5,184</div>
       <div class="outro-stat-label">Miles</div>
     </div>
@@ -684,7 +724,14 @@
     </div>
   </div>
   <div class="outro-divider"></div>
-  <div class="outro-tagline">One bike. One road. Every mile earned.</div>
+  <div class="outro-tagline">A few hundred bucks of fuel & oil.</div>
+  <div class="fly-container flying" id="outroFly" style="display:none;">
+    <div class="fly-body">
+      <div class="fly-wing fly-wing-l"></div>
+      <div class="fly-wing fly-wing-r"></div>
+      <svg width="12" height="12" viewBox="0 0 12 12"><ellipse cx="6" cy="7" rx="2.2" ry="3" fill="rgba(0,0,0,0.7)"/><circle cx="6" cy="3.5" r="1.5" fill="rgba(0,0,0,0.8)"/></svg>
+    </div>
+  </div>
 </section>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -1415,6 +1462,176 @@ function init() {
 }
 
 init();
+
+// ── Fly bug animation ──
+(function initFlies() {
+  function createFlyController(flyEl, sectionEl, textSelector) {
+    if (!flyEl || !sectionEl) return;
+
+    let active = false;
+    let animFrame = null;
+    let currentX = 0, currentY = 0;
+    let state = 'landed';
+    let stateTimer = 0;
+    let rotation = 0;
+    let flightStart = 0, flightDuration = 0;
+    let startX = 0, startY = 0, targetX = 0, targetY = 0;
+    let cx1 = 0, cy1 = 0, cx2 = 0, cy2 = 0;
+
+    function pickLetterTarget() {
+      const els = sectionEl.querySelectorAll(textSelector);
+      if (!els.length) return { x: 100, y: 100 };
+      const el = els[Math.floor(Math.random() * els.length)];
+      const rect = el.getBoundingClientRect();
+      const secRect = sectionEl.getBoundingClientRect();
+      // Land tightly on the text — inset from edges to avoid whitespace/padding
+      const insetX = Math.min(rect.width * 0.1, 8);
+      const insetY = Math.min(rect.height * 0.15, 4);
+      return {
+        x: rect.left - secRect.left + insetX + Math.random() * Math.max(rect.width - insetX * 2, 1),
+        y: rect.top - secRect.top + insetY + Math.random() * Math.max(rect.height - insetY * 2, 1)
+      };
+    }
+
+    function bezier(t, p0, p1, p2, p3) {
+      const u = 1 - t;
+      return u*u*u*p0 + 3*u*u*t*p1 + 3*u*t*t*p2 + t*t*t*p3;
+    }
+
+    function launchToText() {
+      startX = currentX;
+      startY = currentY;
+      // Pick a text element that's far enough away for a real flight
+      let dest, bestDest, bestDist = 0;
+      for (let i = 0; i < 15; i++) {
+        dest = pickLetterTarget();
+        const d = Math.sqrt(Math.pow(dest.x - startX, 2) + Math.pow(dest.y - startY, 2));
+        if (d > bestDist) { bestDist = d; bestDest = dest; }
+        if (d > 150) break; // nice long flight
+      }
+      targetX = bestDest.x;
+      targetY = bestDest.y;
+
+      const dx = targetX - startX, dy = targetY - startY;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+
+      // Big swooping arcs that go way out into open space
+      const perpX = -dy / Math.max(dist, 1), perpY = dx / Math.max(dist, 1);
+      const arcSize = (dist * (0.8 + Math.random() * 1.5) + 100) * (Math.random() < 0.5 ? 1 : -1);
+
+      cx1 = startX + dx * 0.25 + perpX * arcSize * (0.7 + Math.random() * 0.3);
+      cy1 = startY + dy * 0.25 + perpY * arcSize * (0.7 + Math.random() * 0.3);
+      cx2 = startX + dx * 0.75 + perpX * arcSize * (0.5 + Math.random() * 0.3);
+      cy2 = startY + dy * 0.75 + perpY * arcSize * (0.5 + Math.random() * 0.3);
+
+      // Flight duration scales with distance
+      flightDuration = Math.max(800, Math.min(3500, dist * 3.5 + Math.random() * 800));
+      flightStart = performance.now();
+      state = 'flying';
+      flyEl.classList.remove('landed');
+      flyEl.classList.add('flying');
+    }
+
+    function tick(now) {
+      if (!active) return;
+      const secRect = sectionEl.getBoundingClientRect();
+      if (secRect.bottom < 0 || secRect.top > window.innerHeight) {
+        animFrame = requestAnimationFrame(tick);
+        return;
+      }
+
+      if (state === 'flying') {
+        const elapsed = now - flightStart;
+        let t = Math.min(1, elapsed / flightDuration);
+        // Burst takeoff, fast cruise, short quick decel at the very end
+        if (t < 0.08) {
+          t = t * t / 0.08; // fast burst off the surface
+        } else if (t > 0.88) {
+          // Quick little settle in the last 12% — not a long glide, just a brief "landing"
+          const landing = (t - 0.88) / 0.12;
+          t = 0.88 + 0.12 * (1 - Math.pow(1 - landing, 2));
+        }
+
+        const prevX = currentX, prevY = currentY;
+        currentX = bezier(t, startX, cx1, cx2, targetX);
+        currentY = bezier(t, startY, cy1, cy2, targetY);
+
+        // Rotate fly to face movement direction
+        const dx = currentX - prevX, dy = currentY - prevY;
+        if (Math.abs(dx) > 0.05 || Math.abs(dy) > 0.05) {
+          rotation = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+        }
+        flyEl.style.transform = `translate(${currentX - 6}px, ${currentY - 6}px) rotate(${rotation}deg)`;
+
+        if (t >= 1) {
+          state = 'landed';
+          flyEl.classList.remove('flying');
+          flyEl.classList.add('landed');
+          // Vary sit time: sometimes barely lands before taking off, sometimes hangs out
+          const sitTime = Math.random() < 0.3
+            ? 300 + Math.random() * 700      // short — barely touches down
+            : 1500 + Math.random() * 5000;   // longer rest
+          stateTimer = setTimeout(() => {
+            if (active) launchToText();
+          }, sitTime);
+        }
+      }
+
+      animFrame = requestAnimationFrame(tick);
+    }
+
+    function start() {
+      if (active) return;
+      active = true;
+      flyEl.style.display = '';
+      // Start landed on text
+      const pos = pickLetterTarget();
+      currentX = pos.x;
+      currentY = pos.y;
+      flyEl.style.transform = `translate(${currentX - 6}px, ${currentY - 6}px)`;
+      state = 'landed';
+      flyEl.classList.remove('flying');
+      flyEl.classList.add('landed');
+      stateTimer = setTimeout(() => {
+        if (active) launchToText();
+      }, 2000 + Math.random() * 3000);
+      animFrame = requestAnimationFrame(tick);
+    }
+
+    function stop() {
+      active = false;
+      flyEl.style.display = 'none';
+      if (animFrame) cancelAnimationFrame(animFrame);
+      if (stateTimer) clearTimeout(stateTimer);
+    }
+
+    return { start, stop, el: sectionEl };
+  }
+
+  const heroFly = createFlyController(
+    document.getElementById('heroFly'),
+    document.querySelector('.hero'),
+    '.hero-title, .hero-subtitle, .hero-stat-value, .hero-stat-label'
+  );
+
+  const outroFly = createFlyController(
+    document.getElementById('outroFly'),
+    document.getElementById('outroSection'),
+    '.outro-title, .outro-subtitle, .outro-stat-value, .outro-stat-label, .outro-tagline'
+  );
+
+  // Use IntersectionObserver to start/stop flies
+  [heroFly, outroFly].forEach(ctrl => {
+    if (!ctrl) return;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) ctrl.start();
+        else ctrl.stop();
+      });
+    }, { threshold: 0.3 });
+    obs.observe(ctrl.el);
+  });
+})();
 </script>
 </body>
 </html>
