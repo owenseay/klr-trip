@@ -3,7 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The KLR Trip — Washington to Florida</title>
+<title>The KLR Trip — Camano Island to Orlando</title>
+<meta name="description" content="5,184 miles on a KLR 650 from Camano Island, WA to Orlando, FL. An interactive scroll-driven map of a 16-day solo motorcycle trip across 12 states.">
+<meta name="author" content="Owen Seay">
+
+<!-- Open Graph -->
+<meta property="og:title" content="The KLR Trip">
+<meta property="og:description" content="5,184 miles. 16 days. 12 states. A solo motorcycle trip from Washington to Florida.">
+<meta property="og:image" content="new_mexico.webp">
+<meta property="og:type" content="website">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The KLR Trip">
+<meta name="twitter:description" content="5,184 miles. 16 days. 12 states. A solo motorcycle trip from Washington to Florida.">
+<meta name="twitter:image" content="new_mexico.webp">
+
+<!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%230a0a0a'/><circle cx='16' cy='16' r='10' fill='none' stroke='%23f0a500' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='%23f0a500'/></svg>">
+
+<!-- Preload hero video -->
+<link rel="preload" href="hero-web.mp4" as="video" type="video/mp4">
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -666,7 +687,7 @@
 
     <!-- Photo/video overlays -->
     <div class="photo-overlay" id="video-ferry-ride" style="top: 10%; left: 3%;">
-      <video src="ferry-ride-web.mp4" muted loop playsinline style="max-width: 650px;"></video>
+      <video data-src="ferry-ride-web.mp4" muted loop playsinline preload="none" style="max-width: 650px;"></video>
     </div>
     <div class="photo-overlay" id="photo-cape-flattery" style="top: 2%; left: 1%;">
       <img src="cape-flattery.webp" alt="Cape Flattery" style="max-width: 650px;">
@@ -681,10 +702,10 @@
       <img src="me-and-ben-2.webp" alt="Me and Ben" style="max-width: 550px;">
     </div>
     <div class="photo-overlay" id="video-tetons" style="top: 8%; right: 3%; left: auto;">
-      <video src="tetons-web.mp4" muted loop playsinline style="max-width: 650px;"></video>
+      <video data-src="tetons-web.mp4" muted loop playsinline preload="none" style="max-width: 650px;"></video>
     </div>
     <div class="photo-overlay" id="video-moab-desert" style="top: 10%; left: 3%;">
-      <video src="moab-desert-web.mp4" muted loop playsinline style="max-width: 650px;"></video>
+      <video data-src="moab-desert-web.mp4" muted loop playsinline preload="none" style="max-width: 650px;"></video>
     </div>
     <div class="photo-overlay" id="photo-flaming-gorge" style="top: 8%; left: 3%;">
       <img src="flaming-gorge-road.webp" alt="Flaming Gorge Road" style="max-width: 700px;">
@@ -699,7 +720,7 @@
       <img src="taos-police.webp" alt="Taos police" style="max-width: 550px;">
     </div>
     <div class="photo-overlay" id="video-gulf-shore" style="top: 8%; left: 3%;">
-      <video src="gulf-shore-web.mp4" muted loop playsinline style="max-width: 650px;"></video>
+      <video data-src="gulf-shore-web.mp4" muted loop playsinline preload="none" style="max-width: 650px;"></video>
     </div>
     <div class="photo-overlay" id="photo-lake-eola" style="top: 5%; right: 2%; left: auto;">
       <img src="lake-eola-new.webp" alt="Lake Eola, Orlando" style="max-width: 650px;">
@@ -1479,10 +1500,13 @@ function init() {
       } else {
         el.classList.remove('visible');
       }
-      // Auto play/pause videos
+      // Auto play/pause videos (lazy-load src on first show)
       const vid = el.querySelector('video');
       if (vid) {
-        if (visible && vid.paused) vid.play().catch(() => {});
+        if (visible) {
+          if (!vid.src && vid.dataset.src) vid.src = vid.dataset.src;
+          if (vid.paused) vid.play().catch(() => {});
+        }
         if (!visible && !vid.paused) vid.pause();
       }
     });
@@ -1613,6 +1637,29 @@ function init() {
       });
     }
   }
+
+  // ── Keyboard navigation: arrow keys jump between media nodes ──
+  const sortedMedia = MEDIA_LOCATIONS.slice().sort((a, b) => a.progress - b.progress);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      // Find next media node after current progress
+      const next = sortedMedia.find(m => m.progress > currentProgress + 0.005);
+      if (next) scrollToProgress(next.progress);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      // Find previous media node before current progress
+      let prev = null;
+      for (let i = sortedMedia.length - 1; i >= 0; i--) {
+        if (sortedMedia[i].progress < currentProgress - 0.005) {
+          prev = sortedMedia[i];
+          break;
+        }
+      }
+      if (prev) scrollToProgress(prev.progress);
+      else window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
 
   // Kick off the smooth animation loop
   readScroll();
