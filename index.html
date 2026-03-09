@@ -1148,19 +1148,6 @@ function init() {
     }).addTo(map);
     m.on('click', () => {
       scrollToProgress(loc.progress);
-      // Toggle video audio on click (user gesture unlocks browser audio)
-      if (loc.type === 'video') {
-        const overlay = document.getElementById(loc.id);
-        const vid = overlay && overlay.querySelector('video');
-        if (vid) {
-          if (!vid.muted) {
-            vid.muted = true;
-          } else {
-            vid.muted = false;
-            vid.volume = 0.2;
-          }
-        }
-      }
     });
     mediaMarkers.push(m);
 
@@ -1722,9 +1709,33 @@ function init() {
     outroObs.observe(outroEl);
 
     // Click HOME to scroll back to hero
+    // KLR engine start sound (Web Audio API for zero-latency playback)
+    let klrAudioCtx = null;
+    let klrBuffer = null;
+    let klrSource = null;
+
+    async function loadKlrSound() {
+      if (klrBuffer) return;
+      klrAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const resp = await fetch('klr-start.mp3');
+      const data = await resp.arrayBuffer();
+      klrBuffer = await klrAudioCtx.decodeAudioData(data);
+    }
+
+    function playKlrSound() {
+      if (!klrBuffer || !klrAudioCtx) return;
+      if (klrSource) { try { klrSource.stop(); } catch (_) {} }
+      klrSource = klrAudioCtx.createBufferSource();
+      klrSource.buffer = klrBuffer;
+      klrSource.connect(klrAudioCtx.destination);
+      klrSource.start(0);
+    }
+
     const outroHomeLink = document.getElementById('outroHomeLink');
     if (outroHomeLink) {
-      outroHomeLink.addEventListener('click', () => {
+      outroHomeLink.addEventListener('click', async () => {
+        await loadKlrSound();
+        playKlrSound();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
