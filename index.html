@@ -1722,13 +1722,24 @@ function init() {
       klrBuffer = await klrAudioCtx.decodeAudioData(data);
     }
 
+    let klrGain = null;
+
     function playKlrSound() {
       if (!klrBuffer || !klrAudioCtx) return;
       if (klrSource) { try { klrSource.stop(); } catch (_) {} }
       klrSource = klrAudioCtx.createBufferSource();
       klrSource.buffer = klrBuffer;
-      klrSource.connect(klrAudioCtx.destination);
-      klrSource.start(0);
+      klrGain = klrAudioCtx.createGain();
+      klrGain.gain.value = 1.0;
+      klrSource.connect(klrGain);
+      klrGain.connect(klrAudioCtx.destination);
+      // Skip first 1s of silence, play the rest
+      const duration = klrBuffer.duration - 1;
+      klrSource.start(0, 1, duration);
+      // Fade out over last 3 seconds
+      const fadeStart = klrAudioCtx.currentTime + duration - 3;
+      klrGain.gain.setValueAtTime(1.0, fadeStart);
+      klrGain.gain.linearRampToValueAtTime(0, fadeStart + 3);
     }
 
     const outroHomeLink = document.getElementById('outroHomeLink');
