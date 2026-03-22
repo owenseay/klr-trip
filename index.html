@@ -125,10 +125,81 @@
     50% { opacity: 0.8; }
   }
 
+  /* ── INTRO OVERLAY ── */
+  .intro-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+  .intro-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .intro-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .intro-inner {
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 36px 32px;
+    color: rgba(255,255,255,0.75);
+    font-size: 15px;
+    line-height: 1.8;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .intro-photo {
+    width: 100%;
+    border-radius: 6px;
+    margin-bottom: 24px;
+    display: block;
+  }
+  .intro-inner p {
+    margin-bottom: 18px;
+  }
+  .intro-inner p.instructions {
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    line-height: 1.7;
+  }
+  .intro-dismiss {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 12px 36px;
+    background: #f0a500;
+    color: #0a0a0a;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .intro-dismiss:hover {
+    background: #d4920a;
+  }
+  @media (max-width: 640px) {
+    .intro-inner { font-size: 14px; padding: 28px 24px; }
+  }
+
   /* ── MAP SECTION ── */
   .map-section {
     position: relative;
-    height: 1500vh; /* 50vh intro + 1200vh route + 50vh end pause + 200vh crossfade */
+    height: 1335vh; /* 20vh intro + 1200vh route + 15vh end pause + 100vh crossfade */
   }
   .map-sticky {
     position: sticky;
@@ -696,7 +767,7 @@
       padding: 0.5rem 0.8rem 1rem;
     }
     .elev-profile {
-      height: 28px;
+      display: none;
     }
     .progress-bar-wrap {
       height: 10px;
@@ -777,7 +848,6 @@
   <div class="map-sticky">
     <div id="map"></div>
     <div class="route-svg-overlay" id="routeSvgOverlay"></div>
-
     <!-- Photo/video overlays -->
     <div class="photo-overlay" id="video-ferry-ride" style="top: 10%; left: 3%;">
       <video data-src="ferry-ride-web.mp4" muted loop playsinline preload="none" style="max-width: 650px;"></video>
@@ -913,6 +983,17 @@
     </div>
   </div>
 </section>
+
+<div class="intro-overlay" id="introOverlay">
+  <div class="intro-inner">
+    <img src="no front wheel.webp" alt="The KLR 650 propped up with the front wheel removed" class="intro-photo">
+    <p>A few years ago I got on Craigslist and bought me this here KLR650 from a corn farmer down in Yakima WA. I changed the tires and oil and bribed some sweet old biddies at a thrift shop to sell me one of their plastic yarn baskets for $20 which I then zip tied onto the luggage rack and took off!</p>
+    <p>Other than going east and going south the route was improvised day by day, mile by mile, for 16 days and 5,000+ miles. I bathed in watering holes and rivers when they came along and slept on the ground next to the dirty pig each night using my boots as a pillow.</p>
+    <p>After the trip I went back and traced my route into Google Maps and used the coordinates to build this interactive scroll-driven memory.</p>
+    <p class="instructions">Scroll up and down to control the marker. Click on waypoints to see pictures and short video clips. Mileage, elevation, and rear tire rotations update in the HUD as you go. Toggle between light, dark, satellite, or a terrain map view.</p>
+    <button class="intro-dismiss" id="introDismiss">Ride</button>
+  </div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -1359,16 +1440,18 @@ function init() {
   let targetBearing = 0;
   const LERP_SPEED = 0.06; // Lower = smoother/slower interpolation
 
-  // Layout: 50vh intro | 1200vh route | 50vh end pause | 200vh crossfade to SVG
-  const INTRO_PAUSE_FRAC = 50 / 1500;
-  const ROUTE_END_FRAC = 1250 / 1500;
+  // Layout: 20vh intro | 1200vh route | 15vh end pause | 100vh crossfade to SVG
+  const INTRO_PAUSE_FRAC = 20 / 1335;
+  const ROUTE_END_FRAC = 1220 / 1335;
   const ROUTE_SCROLL_FRAC = ROUTE_END_FRAC;
-  const CROSSFADE_START_FRAC = 1300 / 1500;
+  const CROSSFADE_START_FRAC = 1235 / 1335;
   let targetZoomOut = 0;   // scroll-driven target for crossfade
   let currentZoomOut = 0;  // lerp-smoothed crossfade progress
+  let introDismissed = false; // true after intro overlay is dismissed
 
   // Read scroll position and set target
   function readScroll() {
+    if (!introDismissed) return;
     const rect = mapSection.getBoundingClientRect();
     const scrollable = rect.height - window.innerHeight;
     const scrolled = -rect.top;
@@ -1408,6 +1491,80 @@ function init() {
   }
 
   window.addEventListener('scroll', readScroll, { passive: true });
+
+  // Intro overlay — fixed modal triggered when map enters viewport
+  const introOverlay = document.getElementById('introOverlay');
+  const introDismiss = document.getElementById('introDismiss');
+  let introShown = false;
+
+  // KLR engine start sound (Web Audio API for zero-latency playback)
+  let klrAudioCtx = null;
+  let klrBuffer = null;
+  let klrSource = null;
+  let klrGain = null;
+
+  async function loadKlrSound() {
+    if (klrBuffer) return;
+    if (!klrAudioCtx) {
+      klrAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const resp = await fetch('klr-start.mp3');
+    const data = await resp.arrayBuffer();
+    klrBuffer = await klrAudioCtx.decodeAudioData(data);
+  }
+
+  function playKlrSound() {
+    if (!klrBuffer || !klrAudioCtx) return;
+    if (klrSource) { try { klrSource.stop(); } catch (_) {} }
+    klrSource = klrAudioCtx.createBufferSource();
+    klrSource.buffer = klrBuffer;
+    klrGain = klrAudioCtx.createGain();
+    klrGain.gain.value = 1.0;
+    klrSource.connect(klrGain);
+    klrGain.connect(klrAudioCtx.destination);
+    const duration = klrBuffer.duration - 1;
+    klrSource.start(0, 1, duration);
+    const fadeStart = klrAudioCtx.currentTime + duration - 3;
+    klrGain.gain.setValueAtTime(1.0, fadeStart);
+    klrGain.gain.linearRampToValueAtTime(0, fadeStart + 3);
+  }
+
+  function isIntroOpen() {
+    return introOverlay && introOverlay.classList.contains('visible') && !introOverlay.classList.contains('fade-out');
+  }
+  function showIntro() {
+    if (introShown || !introOverlay) return;
+    introShown = true;
+    introOverlay.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+  }
+  function dismissIntro() {
+    if (!introOverlay || introDismissed) return;
+    introDismissed = true;
+    introOverlay.classList.add('fade-out');
+    document.body.style.overflow = '';
+    setTimeout(() => { introOverlay.remove(); }, 500);
+  }
+
+  // Show when map section enters viewport
+  const introObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting && !introDismissed) showIntro();
+    });
+  }, { threshold: 0.05 });
+  introObs.observe(mapSection);
+
+  if (introDismiss) {
+    introDismiss.addEventListener('click', dismissIntro);
+  }
+  if (introOverlay) {
+    introOverlay.addEventListener('click', (e) => {
+      if (e.target === introOverlay) dismissIntro();
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isIntroOpen()) dismissIntro();
+  });
 
   // Smooth animation loop — runs every frame regardless of scroll
   function animate() {
@@ -1709,40 +1866,6 @@ function init() {
     }, { threshold: 0.15 });
     outroObs.observe(outroEl);
 
-    // Click HOME to scroll back to hero
-    // KLR engine start sound (Web Audio API for zero-latency playback)
-    let klrAudioCtx = null;
-    let klrBuffer = null;
-    let klrSource = null;
-
-    async function loadKlrSound() {
-      if (klrBuffer) return;
-      klrAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const resp = await fetch('klr-start.mp3');
-      const data = await resp.arrayBuffer();
-      klrBuffer = await klrAudioCtx.decodeAudioData(data);
-    }
-
-    let klrGain = null;
-
-    function playKlrSound() {
-      if (!klrBuffer || !klrAudioCtx) return;
-      if (klrSource) { try { klrSource.stop(); } catch (_) {} }
-      klrSource = klrAudioCtx.createBufferSource();
-      klrSource.buffer = klrBuffer;
-      klrGain = klrAudioCtx.createGain();
-      klrGain.gain.value = 1.0;
-      klrSource.connect(klrGain);
-      klrGain.connect(klrAudioCtx.destination);
-      // Skip first 1s of silence, play the rest
-      const duration = klrBuffer.duration - 1;
-      klrSource.start(0, 1, duration);
-      // Fade out over last 3 seconds
-      const fadeStart = klrAudioCtx.currentTime + duration - 3;
-      klrGain.gain.setValueAtTime(1.0, fadeStart);
-      klrGain.gain.linearRampToValueAtTime(0, fadeStart + 3);
-    }
-
     const outroHomeLink = document.getElementById('outroHomeLink');
     if (outroHomeLink) {
       outroHomeLink.addEventListener('click', async () => {
@@ -2015,5 +2138,6 @@ init();
   }
 })();
 </script>
+
 </body>
 </html>
