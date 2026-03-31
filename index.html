@@ -1857,6 +1857,8 @@ function init() {
     const outroHomeLink = document.getElementById('outroHomeLink');
     if (outroHomeLink) {
       outroHomeLink.addEventListener('click', async () => {
+        introDismissed = true;
+        if (introOverlay?.parentNode) introOverlay.remove();
         await loadKlrSound();
         playKlrSound();
         window.scrollTo({ top: 0, behavior: 'smooth' });
