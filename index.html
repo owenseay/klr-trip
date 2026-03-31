@@ -552,29 +552,17 @@
   }
   .outro-home-word {
     position: relative;
-    transition: color 0.3s ease;
     cursor: pointer;
+    animation: homeGlow 4s ease-in-out infinite;
   }
   .outro-home-word:hover {
     color: #f0a500;
+    animation: none;
+    text-shadow: 0 0 12px rgba(240,165,0,0.4);
   }
-  .outro-home-word:hover .outro-home-hint svg {
-    stroke: rgba(240,165,0,0.7);
-    transition: stroke 0.3s ease;
-  }
-  .outro-home-hint {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    opacity: 0.6;
-    line-height: 1;
-    margin-bottom: -0.1em;
-    animation: homeBounce 2s ease-in-out infinite;
-  }
-  @keyframes homeBounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-5px); }
+  @keyframes homeGlow {
+    0%, 100% { color: inherit; text-shadow: none; }
+    50% { color: #f0a500; text-shadow: 0 0 18px rgba(240,165,0,0.3); }
   }
   .outro-subtitle {
     position: relative;
@@ -954,7 +942,7 @@
 <section class="outro" id="outroSection">
   <div class="outro-bg"></div>
   <div class="outro-title">
-    THE LONG WAY <span class="outro-home-word" id="outroHomeLink">HOME<span class="outro-home-hint"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg></span></span>
+    THE LONG WAY <span class="outro-home-word" id="outroHomeLink">HOME</span>
   </div>
   <div class="outro-stats">
     <div class="outro-stat">
